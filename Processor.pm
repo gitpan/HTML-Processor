@@ -7,25 +7,7 @@ require Exporter;
 
 @ISA = qw(Exporter);
 
-$VERSION = '0.2';
-
-# VERSION HISTORY
-# 05/11/2002 == Version 0.2 ------------------
-# 01/11/2002
-#   Removed globals for mod_perl functionality
-# 29/10/2002
-#   Added path stacking for template processing
-#   and lookup of includes
-# 15/03/2002
-#   fixed bug in nested loops
-# 20/03/2002 
-#   added 'LIKE' and 'NOT LIKE' logic to the
-#   IF/ELSE comparisons
-# 08/04/2002
-#   added sorting for arrays with 'bgcolor' and 'bgcolour'
-#   $tpl->sort( [array_name] ); now works with bg colours
-#
-# 09/08/2001 == Version 0.0.1 -------------------
+$VERSION = '0.2.1';
 
 #----------------------------------------------
 # Constructor for Template Object
@@ -501,7 +483,12 @@ sub process {
 	# if we are dumping object data
 	if( $debug_object ){ 
 		use Data::Dumper;
-		$template .= "<div style=\"position:relative; top:50;\"><pre>" . Dumper( $self ) . "</pre></div>"; 
+		# take a copy of the object
+        my $debugObj = $self;
+        # clean up the object before debug display
+        delete $debugObj->{ IT_STACK };
+        delete $debugObj->{ DEBUG_LEVELS };
+		$template .= "<div style=\"position:relative; top:50;\"><pre>" . Dumper( $debugObj ) . "</pre></div>";
 	}
 	# add debug data
 	$template .= $self->build_err if($self->{ DEBUG_LEVEL } > 0);
@@ -596,7 +583,8 @@ sub do_includes {
         
         if ( $file =~ /\./ ) {
             $filepath = $$template_path_ref . $file;
-            my ($filename, $local_path);
+            my $filename;
+            my $local_path = "";
             # has a path
             if ($file =~ /\// ) {
                 $local_path = $file;
@@ -791,7 +779,7 @@ sub iterate_loop {
 		$it_name = "${it_name}~${it_key}";
 	}
 
-	my $max_count;
+	my $max_count = 0;
 	# get the longest array for this loop
 	foreach (keys %{ $self->{ LOOPS }->{$it_name} }){
 		if(ref $self->{ LOOPS }->{$it_name}->{$_} eq "ARRAY"){
@@ -909,7 +897,8 @@ sub iterate_loop {
 			
 			# handle duplicate naming of nested loops
 			$nest_multi{$curr_nst}++ ;
-			$loop = $curr_pre. $self->iterate_loop( $curr_nst, $self->{ IT_STACK }->{$curr_nst}[$nest_multi{$curr_nst}-1], $self->{ PARENTS }{$input_name} ) .$curr_post;
+            my $thisdata = $self->iterate_loop( $curr_nst, $self->{ IT_STACK }->{$curr_nst}[$nest_multi{$curr_nst}-1], $self->{ PARENTS }{$input_name} );
+			$loop = $curr_pre . $thisdata . $curr_post;
             
 		}
 		# add to iterated content
@@ -925,7 +914,7 @@ sub do_variables {
 	my $self 			= shift;
 	my $template_ref 	= shift;
 
-    $$template_ref =~ s/${syntax_pre}variable='([\d\w-]+)'${syntax_post}/$self->{ ESCAPE } ? $self->escape_html($self->variable($1)) : $self->variable($1)/eg;
+    $$template_ref =~ s/${syntax_pre}variable='([\d\w-]+)'${syntax_post}/$self->{ ESCAPE } ? $self->escape_html($self->variable($1)) : ($self->variable($1) )/eg;
 }
 
 
@@ -962,8 +951,8 @@ sub do_clean {
 sub compare {
 	my $self	= shift;
 	my $oper	= shift;
-	my $left	= shift;
-	my $right	= shift;
+	my $left	= shift || 0;
+	my $right	= shift || 0;
 	$oper =~ s/ //g;
 
 	if(

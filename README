@@ -1,4 +1,4 @@
-HTML/Processor version 0.0.2
+HTML/Processor version 0.2.1
 ============================
 
     HTML::Processor HTML Template Processor
@@ -35,6 +35,30 @@ All documentation, with examples, is in Processor.pm, additionally in Processor.
 which was generated via pod2html from Processor.pm
 See also provided example script.
 
+VERSION HISTORY
+
+13/11/200x == Version 0.2.1 ------------------
+13/11/2002
+  looping bug fix: first element disappeared
+06/11/2002
+  Clenup of uninitialised vars
+
+05/11/2002 == Version 0.2 ------------------
+01/11/2002
+    Removed globals for mod_perl functionality
+29/10/2002
+    Added path stacking for template processing
+    and lookup of includes
+15/03/2002
+    fixed bug in nested loops
+20/03/2002 
+    added 'LIKE' and 'NOT LIKE' logic to the
+    IF/ELSE comparisons
+08/04/2002
+    added sorting for arrays with 'bgcolor' and 'bgcolour'
+    $tpl->sort( [array_name] ); now works with bg colours
+
+09/08/2001 == Version 0.0.1 -------------------
 
 EXAMPLE
 

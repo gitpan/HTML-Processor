@@ -4,3 +4,7 @@ MANIFEST
 Processor.pm
 README
 test.pl
+docs/Processor.html
+examples/example.pl
+examples/example.html
+examples/header.inc
